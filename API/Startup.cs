@@ -49,7 +49,10 @@ namespace API
                 options.TokenValidationParameters = new TokenValidationParameters 
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["TokenKey"])),
+                    IssuerSigningKeys = new []{
+                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["AccessKey"])),
+                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["RefreshKey"])),
+                    },
                     ValidateIssuer = false,
                     ValidateAudience = false,
                 };

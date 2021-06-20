@@ -52,19 +52,27 @@ namespace API.Controllers
         {
             var user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == login.UserName);
             if (user == default)
-                return Unauthorized("UserName Invalid");
+                return Unauthorized("UserName is Invalid");
             using var hmac = new HMACSHA512(user.PasswordSalt);
             var computeHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(login.Password));
             for (int i = 0; i < computeHash.Length; i++)
             {
                 if (computeHash[i] != user.PasswordHarsh[i])
-                    return Unauthorized("Password Invalid");
+                    return Unauthorized("Password is Invalid");
             }
             return new UserDTO{
                 UserName = login.UserName.ToLower(),
                 Access_Token = _tokenService.CreateToken(user),
-                Refresh_Token = _tokenService.CreateToken(user)
+                Refresh_Token = _tokenService.Create_RToken(user)
             };
         }
+        // Will add analyizing JWT to get user information instead of asking for username
+        // Will revoke the old token 
+        [HttpPost("refresh")]
+        [Authorize]
+        public async Task<ActionResult<UserDTO>> refresh(LoginDTO login){
+            return await this.login(login);
+        }
+
     }
 }
