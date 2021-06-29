@@ -119,3 +119,11 @@ C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\Sy
 C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\Microsoft.IdentityModel.Protocols.dll
 C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\Data\UserDataSeed.json
+C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\AutoMapper.dll
+C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.dll
+C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\Microsoft.Azure.CognitiveServices.Vision.CustomVision.Training.dll
+C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\Microsoft.Rest.ClientRuntime.dll
+C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\Microsoft.Rest.ClientRuntime.Azure.dll
+C:\Users\minhn\Desktop\TinderApp\DatingApp-.NET-Angular-\API\bin\Debug\net5.0\Newtonsoft.Json.dll
