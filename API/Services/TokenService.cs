@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 using API.Entity;
 using API.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
@@ -15,26 +18,34 @@ namespace API.Services
         private readonly SymmetricSecurityKey _Akey;
         private readonly SymmetricSecurityKey _Rkey;
 
+        private readonly UserManager<AppUser> _userManager;
 
-        public TokenService(IConfiguration config)
+        public TokenService(IConfiguration config, UserManager<AppUser> userManager)
         {
+            _userManager = userManager;
             _Akey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["AccessKey"]));
             _Rkey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["RefreshKey"]));
 
         }
-        public string CreateToken(AppUser user)
+        public async Task<string> CreateToken(AppUser user)
         {
             var claims = new List<Claim>{
-                new Claim(JwtRegisteredClaimNames.NameId, user.UserName)
+                new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
             };
+            var roles = await _userManager.GetRolesAsync(user);
+            claims.AddRange(roles.Select(role => 
+                new Claim(ClaimTypes.Role, role)
+            ));
             var creds = new SigningCredentials(_Akey, SecurityAlgorithms.HmacSha512Signature);
-            var tokenDescriptor = new SecurityTokenDescriptor{
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.Now.AddHours(1),
                 SigningCredentials = creds,
             };
             var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor); 
+            var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
         public string Create_RToken(AppUser user)
@@ -44,13 +55,14 @@ namespace API.Services
                 new Claim(JwtRegisteredClaimNames.Email, user.UserName)
             };
             var creds = new SigningCredentials(_Rkey, SecurityAlgorithms.HmacSha512Signature);
-            var tokenDescriptor = new SecurityTokenDescriptor{
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.Now.AddDays(7),
                 SigningCredentials = creds,
             };
             var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor); 
+            var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
         private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)

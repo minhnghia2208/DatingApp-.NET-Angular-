@@ -7,7 +7,9 @@ using API.DTOs;
 using API.Entity;
 using API.Interfaces;
 using API.Services;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,12 +17,17 @@ namespace API.Controllers
 {
     public class AccountController : BaseAPIController
     {
-        private readonly DataContext _context;
         private readonly ITokenService _tokenService;
+        public IMapper _mapper { get; }
+        private readonly UserManager<AppUser> _userManager;
+        private readonly SignInManager<AppUser> _signInManager;
 
-        public AccountController(DataContext context, ITokenService tokenService)
+        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, 
+            ITokenService tokenService, IMapper mapper)
         {
-            _context = context;
+            _signInManager = signInManager;
+            _userManager = userManager;
+            _mapper = mapper;
             _tokenService = tokenService;
         }
 
@@ -29,48 +36,52 @@ namespace API.Controllers
         {
             if (await CheckUnique(register.Username))
                 return BadRequest("User already exists");
-            using var hmac = new HMACSHA512();
-            var user = new AppUser
+            var user = _mapper.Map<AppUser>(register);
+            user.UserName = register.Username.ToLower();
+            var result = await _userManager.CreateAsync(user, register.Password);
+            if (!result.Succeeded) return BadRequest(result.Errors);
+            var roleResult = await _userManager.AddToRoleAsync(user, "Member");
+            if (!roleResult.Succeeded) return BadRequest(result.Errors);
+            return new UserDTO
             {
                 UserName = register.Username.ToLower(),
-                PasswordHarsh = hmac.ComputeHash(Encoding.UTF8.GetBytes(register.Password)),
-                PasswordSalt = hmac.Key,
-            };
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return new UserDTO{
-                UserName = register.Username.ToLower(),
-                Access_Token = _tokenService.CreateToken(user),
+                Access_Token = await _tokenService.CreateToken(user),
+                KnownAs = user.KnownAs,
+                Gender = user.Gender,
             };
         }
         private async Task<bool> CheckUnique(string username)
         {
-            return await _context.Users.AnyAsync(x => x.UserName == username.ToLower());
+            return await _userManager.Users.AnyAsync(x => x.UserName == username.ToLower());
         }
         [HttpPost("login")]
         public async Task<ActionResult<UserDTO>> login(LoginDTO login)
         {
-            var user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == login.UserName);
+            // var user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == login.UserName);
+            var user = await _userManager.Users
+                .Include(p => p.Photos)
+                .SingleOrDefaultAsync(x => x.UserName == login.UserName.ToLower());
             if (user == default)
                 return Unauthorized("UserName is Invalid");
-            using var hmac = new HMACSHA512(user.PasswordSalt);
-            var computeHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(login.Password));
-            for (int i = 0; i < computeHash.Length; i++)
+            var result = await _signInManager
+                .CheckPasswordSignInAsync(user, login.Password, false);
+            if (!result.Succeeded) return Unauthorized();
+            return new UserDTO
             {
-                if (computeHash[i] != user.PasswordHarsh[i])
-                    return Unauthorized("Password is Invalid");
-            }
-            return new UserDTO{
                 UserName = login.UserName.ToLower(),
-                Access_Token = _tokenService.CreateToken(user),
-                Refresh_Token = _tokenService.Create_RToken(user)
+                Access_Token = await _tokenService.CreateToken(user),
+                Refresh_Token = _tokenService.Create_RToken(user),
+                PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
+                KnownAs = user.KnownAs,
+                Gender = user.Gender
             };
         }
         // Will add analyizing JWT to get user information instead of asking for username
         // Will revoke the old token 
         [HttpPost("refresh")]
         [Authorize]
-        public async Task<ActionResult<UserDTO>> refresh(LoginDTO login){
+        public async Task<ActionResult<UserDTO>> refresh(LoginDTO login)
+        {
             return await this.login(login);
         }
 

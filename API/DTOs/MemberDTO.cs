@@ -22,8 +22,6 @@ namespace API.DTOs
         public string City { get; set; }
         public string Country { get; set; }
         public ICollection<PhotoDTO> Photos { get; set; }
-        public List<Waitlist> Waitlist{ get; set; }
-        public int temp { get; set; }
 
     }
 }

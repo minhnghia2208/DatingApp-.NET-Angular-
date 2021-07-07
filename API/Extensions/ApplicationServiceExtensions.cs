@@ -1,7 +1,9 @@
 using API.Data;
 using API.Data.Helpers;
 using API.Interfaces;
+using API.services;
 using API.Services;
+using API.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,8 +14,11 @@ namespace API.Extensions
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services,
         IConfiguration config){
+            services.AddSingleton<PresenceTracker>();
             services.AddScoped<ITokenService, TokenService>();
-            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IPhotoService, PhotoService>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<LogUserActivity>();
             services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
             services.AddDbContext<DataContext>(options =>
             {
