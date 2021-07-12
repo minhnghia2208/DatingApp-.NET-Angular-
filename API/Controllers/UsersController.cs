@@ -61,10 +61,6 @@ namespace API.Controllers
         {
             var user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
             _mapper.Map(memberUpdateDTO, user);
-
-            Console.WriteLine("TESTING TESTING TESTING");
-            Console.WriteLine(user);
-            Console.WriteLine("AFTER TESTING");
             
             _unitOfWork.UserRepository.Update(user);
             if (await _unitOfWork.Complete()) return NoContent();
@@ -99,7 +95,7 @@ namespace API.Controllers
 
             if (await _unitOfWork.Complete())
             {
-                return CreatedAtRoute("GetUser", new { username = user.UserName }, _mapper.Map<PhotoDTO>(photo));
+                // return CreatedAtRoute("GetUser", new { username = user.UserName }, _mapper.Map<PhotoDTO>(photo));
             }
 
             return BadRequest("Problem addding photo");
@@ -146,5 +142,6 @@ namespace API.Controllers
             return BadRequest("Failed to delete!");
 
         }
+        
     }
 }

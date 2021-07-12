@@ -19,6 +19,19 @@ namespace API.Data
         _context = context;
         }
 
+        public Photo GetMainPhoto(string userName)
+        {
+            var user = _context.Users
+                .Include(p => p.Photos)
+                .FirstOrDefault(x => x.UserName == userName);
+                
+    
+            foreach (var photo in user.Photos){
+                if (photo.IsMain) return photo;
+            }
+            return null;
+        }
+
         public async Task<UserLike> GetUserLike(int sourceUserId, int LikedUserId)
         {
             return await _context.Likes.FindAsync(sourceUserId, LikedUserId);
@@ -53,5 +66,6 @@ namespace API.Data
                 .Include(x => x.LikedUsers)
                 .FirstOrDefaultAsync(x => x.Id == userId);
         }
+        
     }
 }

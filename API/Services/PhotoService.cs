@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Net.Http.Headers;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using API.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -12,7 +11,9 @@ namespace API.services
 {
     public class PhotoService : IPhotoService
     {
+        
         public async Task<string> AddPhotoAsync(IFormFile file, string username)
+
         {
             var folderName = Path.Combine("StaticFiles", "Images");
             var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
@@ -25,7 +26,7 @@ namespace API.services
                 
                 var fullPath = Path.Combine(pathToSave, fileName);
                 var dbPath = Path.Combine(folderName, fileName);
-                using var image = Image.Load(file.OpenReadStream());
+                using var image = SixLabors.ImageSharp.Image.Load(file.OpenReadStream());
                 image.Mutate(x => x.Resize(500, 500));
                 await image.SaveAsync(fullPath);
                 // using (var stream = new FileStream(fullPath, FileMode.Create))

@@ -42,6 +42,10 @@ namespace API.Data
             var query = _context.Users.AsQueryable();
             query = query.Where(u => u.UserName != userParams.CurrentUsername);
             query = query.Where(u => u.Gender == userParams.Gender);
+
+            if (userParams.Attractiveness == "Beautiful")
+                query = query.Where(u => u.Attractiveness == userParams.Attractiveness);
+
             var minDob = DateTime.Today.AddYears(-userParams.MaxAge-1);
             var maxDob = DateTime.Today.AddYears(-userParams.MinAge);
             query = query.Where(u => u.DateOfBirth >= minDob && u.DateOfBirth <= maxDob);

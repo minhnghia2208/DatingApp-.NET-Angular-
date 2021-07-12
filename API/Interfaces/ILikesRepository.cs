@@ -11,5 +11,6 @@ namespace API.Interfaces
         Task<UserLike> GetUserLike(int sourceUserId, int LikedUserId);
         Task<AppUser> GetUserWithLikes(int userId);
         Task<PagedList<LikeDTO>> GetUserLikes(LikesParams likesParams);
+        Photo GetMainPhoto(string userName);
     }
 }
