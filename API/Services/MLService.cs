@@ -15,12 +15,12 @@ namespace API.Services
 {
     public class MLService : IMLService
     {
-        private static Guid projectId = Guid.Parse("");
+        private static Guid projectId = Guid.Parse("c13464db-3ccd-4c23-a1e0-a1682afa0f0c");
         private static string trainingEndpoint = "https://nghia.cognitiveservices.azure.com/";
         private static string trainingKey = "";
         private static string predictionEndpoint = "https://nghia-prediction.cognitiveservices.azure.com/";
         private static string predictionKey = "";
-        private static string predictionResourceId = "";
+        private static string predictionResourceId = "/subscriptions/250973c5-41df-4f6b-a0de-5a09e840b135/resourceGroups/Student/providers/Microsoft.CognitiveServices/accounts/Nghia-Prediction";
         private static List<string> Beautiful;
         private static List<string> Average;
         private static Tag beautyTag;
@@ -63,16 +63,22 @@ namespace API.Services
         public void UploadMainImage(CustomVisionTrainingClient trainingApi, string fullPath){
             var stream = new MemoryStream(System.IO.File.ReadAllBytes(fullPath));
 
-            
             var tags = trainingApi.GetTags(projectId);
             trainingApi.CreateImagesFromData(projectId, stream, new List<Guid>() { tags[0].Id });
 
         }
 
-        public void PublishIteration(CustomVisionTrainingClient trainingApi)
+        public void PublishIteration(CustomVisionTrainingClient trainingApi, Guid iterId)
         {
-            
-            trainingApi.PublishIteration(projectId, iteration.Id, publishedModelName, predictionResourceId);
+            var iters = trainingApi.GetIterations(projectId);
+            if (iters.Count > 0){
+                foreach (var iter in iters){
+                    if (iter.PublishName != null){
+                        trainingApi.UnpublishIteration(projectId, iter.Id);
+                    }
+                }
+            }
+            trainingApi.PublishIteration(projectId, iterId, publishedModelName, predictionResourceId);
             Console.WriteLine("Done!\n");   
         }
 
@@ -93,7 +99,7 @@ namespace API.Services
             return result;
         }
 
-        public void TrainProject(CustomVisionTrainingClient trainingApi)
+        public Guid TrainProject(CustomVisionTrainingClient trainingApi)
         {
             Console.WriteLine("\tTraining");
             
@@ -108,6 +114,7 @@ namespace API.Services
                 // Re-query the iteration to get it's updated status
                 iteration = trainingApi.GetIteration(projectId, iteration.Id);
             }
+            return iteration.Id;
         }
 
         public void UploadImages(CustomVisionTrainingClient trainingApi)
@@ -136,14 +143,11 @@ namespace API.Services
             AddTags(trainingApi);
             UploadImages(trainingApi);
             TrainProject(trainingApi);
-            PublishIteration(trainingApi);
+            // PublishIteration(trainingApi);
         }
 
         public void DeleteImages(CustomVisionTrainingClient trainingApi){
             var tags = trainingApi.GetTags(projectId);
-            
-            Guid[] tagId = new Guid[10];
-            tagId[0] = tags[1].Id;
             
             var imgs = trainingApi.GetImages(projectId);
             

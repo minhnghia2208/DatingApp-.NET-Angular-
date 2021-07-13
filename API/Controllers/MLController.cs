@@ -65,16 +65,17 @@ namespace API.Controllers
 
             var result = predictionApi.ClassifyImage(projectId, publishedModelName, testImage);
         }
+
         [HttpGet("Delete")]
         public string Delete(){
-            // Console.WriteLine("Unpublishing iteration.");
-            // trainingApi.UnpublishIteration(projectId, iteration.Id);
+            Console.WriteLine("Unpublishing iteration.");
+            trainingApi.UnpublishIteration(projectId, iteration.Id);
 
-            // Console.WriteLine("Deleting project.");
-            // trainingApi.DeleteProject(projectId);
-            // return("Project Deleted");
-            _mLService.DeleteImages(trainingApi);
-            return "success";
+            Console.WriteLine("Deleting project.");
+            trainingApi.DeleteProject(projectId);
+            return("Project Deleted");
+            // _mLService.DeleteImages(trainingApi);
+            // return "success";
         }
     
         [HttpPost("add-photo")]
@@ -109,6 +110,26 @@ namespace API.Controllers
                 // return "Sucess";
             }
             return BadRequest("Problem addding photo");
+        }
+
+        [HttpGet("testing")]
+        public void testing(){
+            var iters = trainingApi.GetIterations(projectId);
+            
+            if (iters.Count > 0){
+                foreach (var iter in iters){
+                    if (iter.PublishName != null){
+                        Console.WriteLine("TESTY TESTY TESTY TESTY");
+                        Console.WriteLine("TESTY TESTY TESTY TESTY");
+                        Console.WriteLine("TESTY TESTY TESTY TESTY");
+                        Console.WriteLine(iter.PublishName);
+                        Console.WriteLine("TESTY TESTY TESTY TESTY");
+                        Console.WriteLine("TESTY TESTY TESTY TESTY");
+                        Console.WriteLine("TESTY TESTY TESTY TESTY");
+                        trainingApi.UnpublishIteration(projectId, iter.Id);
+                    }
+                }
+            }
         }
     }
 }

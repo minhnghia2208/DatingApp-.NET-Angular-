@@ -10,8 +10,8 @@ namespace API.Interfaces
         CustomVisionPredictionClient AuthenticatePrediction();
         void AddTags(CustomVisionTrainingClient trainingApi);
         void UploadImages(CustomVisionTrainingClient trainingApi);
-        void TrainProject(CustomVisionTrainingClient trainingApi);
-        void PublishIteration(CustomVisionTrainingClient trainingApi);
+        Guid TrainProject(CustomVisionTrainingClient trainingApi);
+        void PublishIteration(CustomVisionTrainingClient trainingApi, Guid iterId);
         Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models.ImagePrediction TestIteration(CustomVisionPredictionClient predictionApi, string fullPath);
         void LoadImagesFromDisk();
         void UploadMainImage(CustomVisionTrainingClient trainingApi, string fullPath);
