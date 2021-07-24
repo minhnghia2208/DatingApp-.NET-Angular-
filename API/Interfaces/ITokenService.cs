@@ -5,7 +5,8 @@ namespace API.Interfaces
 {
     public interface ITokenService
     {
+        Task<string> CreateToken1(AppUser user); 
         Task<string> CreateToken(AppUser user); 
-        string Create_RToken(AppUser user);
+        Task<string> Create_RToken(AppUser user);
     }
 }

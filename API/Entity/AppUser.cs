@@ -18,6 +18,7 @@ namespace API.Entity
         public string Country { get; set; }
         public string Attractiveness { get; set; }
         public int nLike { get; set; } = 0;
+        public bool LikeRead { get; set; } = true;
         public ICollection<Photo> Photos { get; set; }
         
         public ICollection<UserLike> LikedByUsers { get; set; }

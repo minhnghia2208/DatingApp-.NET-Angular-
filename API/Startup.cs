@@ -48,6 +48,11 @@ namespace API
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
             });
+
+            services.AddStackExchangeRedisCache(options => {
+                options.Configuration = _config.GetConnectionString("Redis");
+                options.InstanceName = "RedisDemo_";
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -75,6 +80,7 @@ namespace API
                 endpoints.MapControllers();
                 endpoints.MapHub<PresenceHub>("hubs/presence");
                 endpoints.MapHub<MessageHub>("hubs/message");
+                endpoints.MapHub<LikeHub>("hubs/like");
             });
         }
     }

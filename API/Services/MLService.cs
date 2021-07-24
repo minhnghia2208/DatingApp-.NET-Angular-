@@ -20,7 +20,7 @@ namespace API.Services
         private static string trainingKey = "";
         private static string predictionEndpoint = "https://nghia-prediction.cognitiveservices.azure.com/";
         private static string predictionKey = "";
-        private static string predictionResourceId = "/subscriptions/250973c5-41df-4f6b-a0de-5a09e840b135/resourceGroups/Student/providers/Microsoft.CognitiveServices/accounts/Nghia-Prediction";
+        private static string predictionResourceId = "";
         private static List<string> Beautiful;
         private static List<string> Average;
         private static Tag beautyTag;

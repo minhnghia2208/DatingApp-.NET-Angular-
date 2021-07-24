@@ -142,6 +142,16 @@ namespace API.Controllers
             return BadRequest("Failed to delete!");
 
         }
+
+        [HttpPatch]
+        public async Task<ActionResult> PatchUser(bool LikeRead)
+        {
+            var user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
+            user.LikeRead = LikeRead;
+            _unitOfWork.UserRepository.Update(user);
+            if (await _unitOfWork.Complete()) return NoContent();
+            return BadRequest("Failed to patch user");
+        }
         
     }
 }

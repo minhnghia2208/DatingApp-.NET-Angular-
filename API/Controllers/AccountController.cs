@@ -1,34 +1,40 @@
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
-using API.Data;
 using API.DTOs;
 using API.Entity;
 using API.Interfaces;
-using API.Services;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Extensions.Caching.Distributed;
+using API.Extensions;
 
 namespace API.Controllers
 {
     public class AccountController : BaseAPIController
     {
         private readonly ITokenService _tokenService;
+        private readonly IDistributedCache _cache;
+
         public IMapper _mapper { get; }
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
 
-        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, 
-            ITokenService tokenService, IMapper mapper)
+        public AccountController(UserManager<AppUser> userManager
+            , SignInManager<AppUser> signInManager
+            , ITokenService tokenService
+            , IDistributedCache cache
+            , IMapper mapper)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _mapper = mapper;
             _tokenService = tokenService;
+            _cache = cache;
         }
 
         [HttpPost("register")]
@@ -69,20 +75,88 @@ namespace API.Controllers
             return new UserDTO
             {
                 UserName = login.UserName.ToLower(),
-                Access_Token = await _tokenService.CreateToken(user),
-                Refresh_Token = _tokenService.Create_RToken(user),
+                Access_Token = await _tokenService.CreateToken1(user),
+                Refresh_Token = await _tokenService.Create_RToken(user),
                 PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
                 KnownAs = user.KnownAs,
-                Gender = user.Gender
+                Gender = user.Gender,
+                nLike = user.nLike,
+                LikeRead = user.LikeRead,
             };
         }
-        // Will add analyizing JWT to get user information instead of asking for username
-        // Will revoke the old token 
-        [HttpPost("refresh")]
-        [Authorize]
-        public async Task<ActionResult<UserDTO>> refresh(LoginDTO login)
+
+        [Authorize(Policy = "RefreshToken")]
+        [HttpPost("refresh1")]
+        public async Task<ActionResult<UserDTO>> refresh1(TokenDTO token)
         {
-            return await this.login(login);
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token.Access_token);
+           
+            if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value !=
+                jwtToken.Claims.First(claim => claim.Type == "nameid" )?.Value)
+                return Unauthorized("User is unauthorized");
+
+            var username = jwtToken.Claims.FirstOrDefault(claim => claim.Type == "unique_name").Value;
+            if (username == default) return Unauthorized();
+
+            var user = await _userManager.Users
+                .Include(p => p.Photos)
+                .SingleOrDefaultAsync(x => 
+                    x.UserName == username);
+
+            return new UserDTO
+            {
+                UserName = username.ToLower(),
+                Access_Token = await _tokenService.CreateToken(user),
+                Refresh_Token = await _tokenService.Create_RToken(user),
+                PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
+                KnownAs = user.KnownAs,
+                Gender = user.Gender,
+                nLike = user.nLike,
+                LikeRead = user.LikeRead,
+            };
+        }
+
+        [HttpPost("refresh")]
+        public async Task<ActionResult<UserDTO>> refresh(TokenDTO token)
+        {
+            var ahandler = new JwtSecurityTokenHandler();
+            var aToken = ahandler.ReadJwtToken(token.Access_token);
+            var userId = aToken.Claims.FirstOrDefault(claim => claim.Type == "nameid").Value;
+
+            var Refresh_token =  await _cache.GetRecordAsync<string>(userId);
+            if (Refresh_token is null)
+                return Unauthorized("Invalid Refresh Token");
+                
+            var rhandler = new JwtSecurityTokenHandler();
+            var rToken = rhandler.ReadJwtToken(Refresh_token);
+
+            if (rToken.Claims.First(claim => claim.Type == "refreshtoken") == null)
+                return Unauthorized("Invalid Token");
+           
+            if (rToken.Claims.First(claim => claim.Type == "nameid" )?.Value !=
+                aToken.Claims.First(claim => claim.Type == "nameid" )?.Value)
+                return Unauthorized("User is unauthorized");
+
+            var username = aToken.Claims.FirstOrDefault(claim => claim.Type == "unique_name").Value;
+            if (username == default) return Unauthorized();
+
+            var user = await _userManager.Users
+                .Include(p => p.Photos)
+                .SingleOrDefaultAsync(x => 
+                    x.UserName == username);
+
+            return new UserDTO
+            {
+                UserName = username.ToLower(),
+                Access_Token = await _tokenService.CreateToken(user),
+                Refresh_Token = await _tokenService.Create_RToken(user),
+                PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
+                KnownAs = user.KnownAs,
+                Gender = user.Gender,
+                nLike = user.nLike,
+                LikeRead = user.LikeRead,
+            };
         }
 
     }
